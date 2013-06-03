@@ -12,3 +12,7 @@ t/*.beam
 examples/*.beam
 .eunit/*
 log
+
+examples/proxy_openbsd/log
+examples/proxy_openbsd/deps
+examples/proxy_openbsd/ebim

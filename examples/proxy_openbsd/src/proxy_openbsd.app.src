@@ -1,0 +1,13 @@
+{application, proxy_openbsd,
+ [
+  {description, "openbsd proxy example"},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  ishtar
+                 ]},
+  {mod, { proxy_openbsd_app, []}},
+  {env, []}
+ ]}.

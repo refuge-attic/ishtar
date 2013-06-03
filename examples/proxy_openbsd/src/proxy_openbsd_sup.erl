@@ -1,5 +1,5 @@
 
--module(ishtar_sup).
+-module(proxy_openbsd_sup).
 
 -behaviour(supervisor).
 
@@ -24,5 +24,5 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    {ok, { {one_for_one, 10, 10}, []} }.
+    {ok, { {one_for_one, 5, 10}, []} }.
 

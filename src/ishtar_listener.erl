@@ -43,22 +43,22 @@ start_listener(Ref, NbAcceptors, Transport, TransOpts, Protocol,
                                                      ListenerOpts]))
     end.
 
-stop_listener(NameOrPid) ->
-    case supervisor:terminate_child(ishtar_sup, NameOrPid) of
+stop_listener(Ref) ->
+    case supervisor:terminate_child(ishtar_sup, Ref) of
         ok ->
-            supervisor:delete_child(ishtar_sup, NameOrPid);
+            supervisor:delete_child(ishtar_sup, Ref);
         Error ->
             Error
     end.
 
 
-get_port(NameOrPid) ->
-    gen_server:call(NameOrPid, get_port).
+get_port(Ref) ->
+    gen_server:call(Ref, get_port).
 
 %% @doc return a child spec suitable for embeding your listener in the
 %% supervisor
 child_spec(Ref, Options) ->
-    {{local, Ref}, {ishtar_listener, start_link, [Options]},
+    {Ref, {ishtar_listener, start_link, [Options]},
             permanent, 5000, worker, [Ref]}.
 
 start_link([_, _, _, _, _, ListenerOpts] = Options) ->

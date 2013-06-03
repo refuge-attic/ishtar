@@ -3,7 +3,8 @@
 
 -export([start_listener/6, start_listener/7,
          stop_listener/1,
-         get_port/1]).
+         get_port/1,
+         info/1, info/2]).
 
 
 -export([start_link/1]).
@@ -55,6 +56,12 @@ stop_listener(Ref) ->
 get_port(Ref) ->
     gen_server:call(Ref, get_port).
 
+info(Ref) ->
+    info(Ref, [ip, port, open_reqs, nb_acceptors]).
+
+info(Ref, Keys) ->
+    gen_server:call(Ref, {info, Keys}).
+
 %% @doc return a child spec suitable for embeding your listener in the
 %% supervisor
 child_spec(Ref, Options) ->
@@ -94,6 +101,10 @@ handle_call(get_port, _From, #state{socket=S, transport=Transport}=State) ->
             {reply, Error, State}
     end;
 
+handle_call({info, Keys}, _From, State) ->
+    Infos = get_infos(Keys, State),
+    {reply, Infos, State};
+
 handle_call(_Msg, _From, State) ->
     {reply, ok, State}.
 
@@ -124,6 +135,8 @@ code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 
+%% internals
+
 remove_acceptor(State, Pid) ->
     State#state{acceptors = lists:delete(Pid, State#state.acceptors),
                 open_reqs = State#state.open_reqs - 1}.
@@ -136,3 +149,32 @@ start_new_acceptor(State) ->
 
     State#state{acceptors = [Pid | State#state.acceptors],
                 open_reqs = State#state.open_reqs + 1}.
+
+get_infos(Keys, #state{transport=Transport, socket=Socket}=State) ->
+    IpPort = case Transport:sockname(Socket) of
+        {ok, IpPort1} ->
+            IpPort1;
+        Error ->
+            {{error, Error}, {error, Error}}
+    end,
+    get_infos(Keys, IpPort, State, []).
+
+get_infos([], _IpPort, _State, Acc) ->
+    lists:reverse(Acc);
+get_infos([ip|Rest], {Ip, _}=IpPort, State, Acc) ->
+    get_infos(Rest, IpPort, State, [{ip, Ip}|Acc]);
+get_infos([port|Rest], {_, Port}=IpPort, State, Acc) ->
+    get_infos(Rest, IpPort, State, [{port, Port}|Acc]);
+get_infos([open_reqs|Rest], IpPort, #state{open_reqs=OpenReqs}=State,
+         Acc) ->
+    get_infos(Rest, IpPort, State, [{open_reqs, OpenReqs}|Acc]);
+get_infos([nb_acceptors|Rest], IpPort, #state{acceptors=Acceptors}=State,
+         Acc) ->
+    get_infos(Rest, IpPort, State, [{acceptors, length(Acceptors)}|Acc]).
+
+
+
+
+
+
+

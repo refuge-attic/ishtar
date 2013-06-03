@@ -27,6 +27,5 @@ accept(Listener, Transport, ListenSocket, Opts,
         {error, esslaccept} ->
             exit(normal);
         {error, Other} ->
-            lager:error("accept failed: ~p~n", [Other]),
             exit({error, Other})
     end.

@@ -58,18 +58,12 @@ get_port(NameOrPid) ->
 %% @doc return a child spec suitable for embeding your listener in the
 %% supervisor
 child_spec(Ref, Options) ->
-    {Ref, {ishtar_listener, start_link, [Options]},
+    {{local, Ref}, {ishtar_listener, start_link, [Options]},
             permanent, 5000, worker, [Ref]}.
 
-
-
-start_link(Options) ->
-    case proplists:get_value(name, Options) of
-        undefined ->
-            gen_server:start_link(?MODULE, Options, []);
-        Name ->
-            gen_server:start_link({local, Name}, ?MODULE, Options, [])
-    end.
+start_link([_, _, _, _, _, ListenerOpts] = Options) ->
+    Ref = proplists:get_value(ref, ListenerOpts),
+    gen_server:start_link({local, Ref}, ?MODULE, Options, []).
 
 init([NbAcceptors, Transport, TransOpts, Protocol, ProtoOpts,
       ListenerOpts]) ->
@@ -93,7 +87,7 @@ init([NbAcceptors, Transport, TransOpts, Protocol, ProtoOpts,
 
 
 handle_call(get_port, _From, #state{socket=S, transport=Transport}=State) ->
-    case Transport:peername(S) of
+    case Transport:sockname(S) of
         {ok, {_, Port}} ->
             {reply, {ok, Port}, State};
         Error ->

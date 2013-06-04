@@ -52,7 +52,6 @@ stop_listener(Ref) ->
             Error
     end.
 
-
 get_port(Ref) ->
     gen_server:call(Ref, get_port).
 
@@ -171,10 +170,3 @@ get_infos([open_reqs|Rest], IpPort, #state{open_reqs=OpenReqs}=State,
 get_infos([nb_acceptors|Rest], IpPort, #state{acceptors=Acceptors}=State,
          Acc) ->
     get_infos(Rest, IpPort, State, [{acceptors, length(Acceptors)}|Acc]).
-
-
-
-
-
-
-

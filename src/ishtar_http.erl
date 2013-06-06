@@ -194,6 +194,15 @@ parse_method(_, _, _, _, _, State) ->
     error_terminate(400, State).
 
 
+parse_method1(<<>>, NParsed, Got, Method,
+              #state{transport=Transport, socket=Socket,
+                     header_timeout=Timeout}=State) ->
+    recv(Transport, Socket, Timeout, fun(Data) ->
+                parse_method1(Data, NParsed, Got, Method, State)
+        end);
+parse_method1(_, NParsed, _, _, #state{max_header_size=MaxLength}=State)
+        when NParsed > MaxLength->
+    error_terminate(414, State);
 parse_method1(<< $\s, Rest/binary >>, NParsed, Method, Method, State) ->
     parse_url(Rest, NParsed, State, Method);
 parse_method1(<< C, Rest/binary >>, NParsed, Got, Method, State) ->
